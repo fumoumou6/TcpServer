@@ -1,0 +1,4 @@
+/home/fumoumou/Desktop/NetDisk/TcpServer/cmake-build-debug/CMakeFiles/TcpServer.dir
+/home/fumoumou/Desktop/NetDisk/TcpServer/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/fumoumou/Desktop/NetDisk/TcpServer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/fumoumou/Desktop/NetDisk/TcpServer/cmake-build-debug/CMakeFiles/TcpServer_autogen.dir
