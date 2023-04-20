@@ -7,7 +7,7 @@
 
 #include "QTcpSocket"
 #include "OpeDB.h"
-
+#include "QDir"
 class MyTcpSocket : public QTcpSocket{
     Q_OBJECT
 public:

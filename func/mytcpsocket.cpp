@@ -44,6 +44,11 @@ void MyTcpSocket::recvMsg() {
 
                 qDebug() << "注册成功";
 
+                qDebug() << "创建文件夹";
+
+                QDir dir;
+                qDebug() << "create dir : " << dir.mkdir(QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1").arg(caName));
+
             } else{
                 strcpy(respdu->caData,REGIST_FAILED);
                 qDebug() << "注册失败";
@@ -251,6 +256,48 @@ void MyTcpSocket::recvMsg() {
             }
 
 
+            break;
+        }
+        case ENUM_MSG_TYPE_CREATE_DIR_REQUEST:{
+            QDir dir;
+            QString strCurPath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1").arg((char *)(pdu->caData));
+
+            qDebug() << strCurPath;
+
+            bool ret = dir.exists(strCurPath);
+            PDU *respdu = mkPDU(0);
+            if (ret){ /*当前目录存在*/
+                char caNewDir[32] = {'\0'};
+                memcpy(caNewDir,pdu->caData+32,32);
+                QString strNewPath = strCurPath+"/"+caNewDir;
+
+                qDebug() <<strNewPath;
+                ret = dir.exists(strNewPath);
+
+                qDebug() << "-->" << ret;
+                if (ret){ /*创建的文件名已存在*/
+
+//                    PDU *respdu = mkPDU(0);
+                    respdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_RESPOND;
+                    strcpy(respdu->caData,FILE_NAME_EXIST);
+
+                } else{ /*创建的文件名不存在*/
+
+                    dir.mkdir(strNewPath);
+//                    PDU *respdu = mkPDU(0);
+                    respdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_RESPOND;
+                    strcpy(respdu->caData,CREATE_DIR_OK);
+
+                }
+            }else{ /*当前目录不存在*/
+                qDebug() << "当前目录不存在";
+//                PDU *respdu = mkPDU(0);
+                respdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_RESPOND;
+                strcpy(respdu->caData,DIR_NO_EXIST);
+
+            }
+
+            write((char *)respdu,respdu->uiPDULen);
             break;
         }
         default:{
