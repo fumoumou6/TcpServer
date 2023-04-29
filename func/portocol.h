@@ -35,6 +35,9 @@ typedef unsigned int uint;
 #define DEL_DIR_OK "delete dir ok"
 #define DEL_DIR_FAILURED "delete dir failured: is regular file"
 
+#define RENAME_FILE_OK "rename file ok"
+#define RENAME_FILE_FAILURED "rename file failured"
+
 enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_MIN = 0,
     ENUM_MSG_TYPE_REGIST_REQUDEST,      /*注册请求*/
@@ -76,6 +79,8 @@ enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_DEL_DIR_REQUEST, /*删除目录请求*/
     ENUM_MSG_TYPE_DEL_DIR_RESPOND, /*删除目录回复*/
 
+    ENUM_MSG_TYPE_RENAME_FILE_REQUEST, /*重命名文件请求*/
+    ENUM_MSG_TYPE_RENAME_FILE_RESPOND, /*重命名文件回复*/
     ENUM_MSG_TYPE_MAX = 0x00ffffff
 };
 

@@ -374,6 +374,39 @@ void MyTcpSocket::recvMsg() {
             respdu = NULL;
             break;
         }
+        case ENUM_MSG_TYPE_RENAME_FILE_REQUEST:{
+            char caOldName[32] = {'\0'};
+            char caNewName[32] = {'\0'};
+
+            strncpy(caOldName,pdu->caData,32);
+            strncpy(caNewName,pdu->caData+32,32);
+
+            char *pPath = new char[pdu->uiMsgLen];
+            memcpy(pPath,pdu->caMsg,pdu->uiMsgLen);
+
+            QString strOldPath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1/%2").arg(pPath).arg(caOldName);
+            QString strNewPath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1/%2").arg(pPath).arg(caNewName);
+            qDebug() << strOldPath;
+            qDebug() << strNewPath;
+
+            QDir dir;
+            bool ret = dir.rename(strOldPath,strNewPath);
+            PDU *respdu = mkPDU(0);
+            respdu->uiMsgType = ENUM_MSG_TYPE_RENAME_FILE_RESPOND;
+
+            if (ret)
+            {
+                strcpy(respdu->caData,RENAME_FILE_OK);
+            } else
+            {
+                strcpy(respdu->caData,RENAME_FILE_FAILURED);
+            }
+
+            write((char *)respdu,respdu->uiPDULen);
+            free(respdu);
+            respdu = NULL;
+            break;
+        }
         default:{
             break;
         }
