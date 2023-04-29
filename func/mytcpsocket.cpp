@@ -407,6 +407,63 @@ void MyTcpSocket::recvMsg() {
             respdu = NULL;
             break;
         }
+        case ENUM_MSG_TYPE_ENTER_DIR_REQUEST:{
+            char caEnterName[32] = {'\0'};
+            strncpy(caEnterName,pdu->caData,32);
+
+            char *pPath = new char[pdu->uiMsgLen];
+            memcpy(pPath,pdu->caMsg,pdu->uiMsgLen);
+
+            QString strPath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1/%2").arg(pPath).arg(caEnterName);
+
+            qDebug() << strPath;
+
+            QFileInfo fileInfo(strPath);
+            PDU *respdu =NULL;
+            if (fileInfo.isDir())
+            {
+//                QDir dir(QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1").arg(strPath));
+                QDir dir(strPath);
+                QFileInfoList fileInfoList = dir.entryInfoList();
+
+                int iFileCount = fileInfoList.size();
+                PDU *respdu = mkPDU(sizeof(FileInfo)*iFileCount);
+                respdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FILE_RESPOND;
+
+                FileInfo *pFileInfo = NULL;
+                QString strFileName;
+                for (int i = 0; i < iFileCount; ++i) {
+
+                    pFileInfo = (FileInfo *)(respdu->caMsg)+i;
+                    strFileName = fileInfoList[i].fileName();
+                    memcpy(pFileInfo->caFileName,strFileName.toStdString().c_str(), strFileName.size());
+
+                    if (fileInfoList[i].isDir()){
+                        pFileInfo->iFileTYpe = 0;
+                    } else if(fileInfoList[i].isFile()){
+                        pFileInfo->iFileTYpe = 1;
+                    }
+                    qDebug() << fileInfoList[i].fileName()
+                             << fileInfoList[i].size()
+                             << "文件夹：" << fileInfoList[i].isDir()
+                             << "常规文件：" << fileInfoList[i].isFile();
+                }
+                write((char *)respdu,respdu->uiPDULen);
+                free(respdu);
+                respdu = NULL;
+
+            }else if (fileInfo.isFile())
+            {
+                respdu = mkPDU(0);
+                respdu->uiMsgType = ENUM_MSG_TYPE_ENTER_DIR_RESPOND;
+                strcpy(respdu->caData,ENTER_DIR_FAILURED);
+
+                write((char *)respdu,respdu->uiPDULen);
+                free(respdu);
+                respdu = NULL;
+            }
+            break;
+        }
         default:{
             break;
         }
