@@ -8,6 +8,7 @@
 #include "QTcpSocket"
 #include "OpeDB.h"
 #include "QDir"
+#include "QFile"
 class MyTcpSocket : public QTcpSocket{
     Q_OBJECT
 public:
@@ -24,6 +25,10 @@ public slots:
 
 private:
     QString m_strName;
+    QFile m_file;
+    qint64 m_iTotal;
+    qint64 m_iReceived;
+    bool m_bUpload;
 };
 
 #endif //TCPSERVER_MYTCPSOCKET_H
