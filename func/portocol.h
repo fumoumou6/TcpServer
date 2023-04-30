@@ -99,6 +99,9 @@ enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_DEL_FILE_REQUEST, /*删除常规文件请求*/
     ENUM_MSG_TYPE_DEL_FILE_RESPOND, /*删除常规文件回复*/
 
+    ENUM_MSG_TYPE_DOWNLOAD_FILE_REQUEST, /*下载常规文件请求*/
+    ENUM_MSG_TYPE_DOWNLOAD_FILE_RESPOND, /*下载常规文件回复*/
+
     ENUM_MSG_TYPE_MAX = 0x00ffffff
 };
 

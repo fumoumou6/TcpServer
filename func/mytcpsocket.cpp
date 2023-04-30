@@ -13,6 +13,9 @@ MyTcpSocket::MyTcpSocket() {
     connect(this, SIGNAL(disconnected())
             , this, SLOT(clientOffline()));
     m_bUpload = false;
+    m_pTimer = new QTimer;
+    connect(m_pTimer, SIGNAL(timeout())
+            , this, SLOT(sendFileToClient()));
 }
 
 void MyTcpSocket::recvMsg() {
@@ -517,6 +520,36 @@ void MyTcpSocket::recvMsg() {
                 respdu = NULL;
                 break;
             }
+            case ENUM_MSG_TYPE_DOWNLOAD_FILE_REQUEST:{
+                qDebug() << "ENUM_MSG_TYPE_DOWNLOAD_FILE_REQUEST";
+
+                char caFileName[32] = {'\0'};
+                strcpy(caFileName,pdu->caData);
+                char *pPath = new char[pdu->uiMsgLen];
+                memcpy(pPath, pdu->caMsg, pdu->uiMsgLen);
+                QString strPath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1/%2").arg(pPath).arg(caFileName);
+                qDebug() << strPath;
+                free(pPath);
+                pPath = NULL;
+
+                QFileInfo fileInfo(strPath);
+                qint64 fileSize = fileInfo.size();
+
+                PDU *respdu = mkPDU(0);
+                respdu->uiMsgType = ENUM_MSG_TYPE_DOWNLOAD_FILE_RESPOND;
+                sprintf(respdu->caData,"%s %11d",caFileName,fileSize);
+                qDebug() << respdu->caData;
+                write((char *)respdu, respdu->uiPDULen);
+                free(respdu);
+                respdu = NULL;
+
+                m_file.setFileName(strPath);
+                qDebug() <<"m_file" << m_file;
+                m_file.open(QIODevice::ReadOnly);
+                m_pTimer->start(1000);
+                qDebug() << "开启定时器";
+                break;
+            }
             default: {
                 break;
             }
@@ -567,5 +600,35 @@ void MyTcpSocket::clientOffline() {
 
 QString MyTcpSocket::getName() {
     return m_strName;
+}
+
+void MyTcpSocket::sendFileToClient() {
+    m_pTimer->stop();
+    qDebug() << "关闭定时器";
+    qDebug() << "发送文件到客户端";
+    char *pData = new char[4096];
+    qint64 ret = 0;
+    while (true)
+    {
+        ret = m_file.read(pData,4096);
+        if (ret > 0 && ret <= 4096)
+        {
+            write(pData,ret);
+        } else if (0 == ret)
+        {
+            m_file.close();
+            break;
+        } else if (ret < 0)
+        {
+            qDebug() << "发送文件给客户端过程中失败";
+            m_file.close();
+            break;
+        }
+    }
+    qDebug() << "发送完成";
+//    free(pData);
+    delete[] pData;
+    qDebug() << "释放pData";
+    pData = NULL;
 }
 

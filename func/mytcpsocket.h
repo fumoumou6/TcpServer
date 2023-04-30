@@ -9,6 +9,7 @@
 #include "OpeDB.h"
 #include "QDir"
 #include "QFile"
+#include "QTimer"
 class MyTcpSocket : public QTcpSocket{
     Q_OBJECT
 public:
@@ -22,6 +23,7 @@ signals:
 public slots:
     void recvMsg();
     void clientOffline();
+    void sendFileToClient();
 
 private:
     QString m_strName;
@@ -29,6 +31,8 @@ private:
     qint64 m_iTotal;
     qint64 m_iReceived;
     bool m_bUpload;
+
+    QTimer *m_pTimer;
 };
 
 #endif //TCPSERVER_MYTCPSOCKET_H
