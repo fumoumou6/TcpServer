@@ -484,6 +484,39 @@ void MyTcpSocket::recvMsg() {
 
                 break;
             }
+            case ENUM_MSG_TYPE_DEL_FILE_REQUEST:{
+                char caName[32] = {'\0'};
+                strcpy(caName, pdu->caData);
+                char *pPath = new char[pdu->uiMsgLen];
+                memcpy(pPath, pdu->caMsg, pdu->uiMsgLen);
+                QString strPath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1/%2").arg(pPath).arg(
+                        caName);
+                qDebug() << strPath;
+
+                QFileInfo fileInfo(strPath);
+                bool ret = false;
+                if (fileInfo.isDir()) {
+                    ret = false;
+                } else if (fileInfo.isFile()) {
+                    QDir dir;
+                    ret = dir.remove(strPath);
+                }
+
+                PDU *respdu = NULL;
+                if (ret) {
+                    respdu = mkPDU(strlen(DEL_FILE_OK) + 1);
+                    respdu->uiMsgType = ENUM_MSG_TYPE_DEL_FILE_RESPOND;
+                    memcpy(respdu->caData, DEL_FILE_OK, strlen(DEL_FILE_OK));
+                } else {
+                    respdu = mkPDU(strlen(DEL_FILE_FAILURED) + 1);
+                    respdu->uiMsgType = ENUM_MSG_TYPE_DEL_FILE_RESPOND;
+                    memcpy(respdu->caData, DEL_FILE_FAILURED, strlen(DEL_FILE_FAILURED));
+                }
+                write((char *) respdu, respdu->uiPDULen);
+                free(respdu);
+                respdu = NULL;
+                break;
+            }
             default: {
                 break;
             }
