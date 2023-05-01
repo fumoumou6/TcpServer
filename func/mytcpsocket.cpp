@@ -550,6 +550,67 @@ void MyTcpSocket::recvMsg() {
                 qDebug() << "开启定时器";
                 break;
             }
+            case ENUM_MSG_TYPE_SHARE_FILE_REQUEST:{
+                qDebug() << "ENUM_MSG_TYPE_SHARE_FILE_REQUEST";
+                char caSendName[32] = {'\0'};
+                int num = 0;
+                sscanf(pdu->caData,"%s %d",caSendName,&num);
+                int size = num*32;
+                PDU *respdu = mkPDU(pdu->uiMsgLen-size);
+                respdu->uiMsgType = ENUM_MSG_TYPE_SHARE_FILE_NOTE;
+
+                strcpy(respdu->caData,caSendName);
+                memcpy(respdu->caMsg,(char *)(pdu->caMsg)+size,pdu->uiPDULen-size);
+
+                qDebug() << "caSendName" << respdu->caData;
+                qDebug() << "caMsg" << respdu->caMsg;
+
+                char caRecvName[32] = {'\0'};
+                for (int i = 0; i < num; ++i) {
+                    memcpy(caRecvName,(char *)(pdu->caMsg)+i*32,32);
+                    qDebug() << "转发到：" << caRecvName;
+                    mytcpserver::getInstance().resend(caRecvName,respdu);
+                }
+                free(respdu);
+                respdu = NULL;
+
+                qDebug() << "/*发送成功反馈*/";
+                respdu = mkPDU(0);                                 /*发送成功反馈*/
+                respdu->uiMsgType = ENUM_MSG_TYPE_SHARE_FILE_RESPOND;
+                strcpy(respdu->caData,"share file ok");
+
+                qDebug() << respdu->caData;
+
+                write((char *)respdu,respdu->uiPDULen);
+                free(respdu);
+                respdu = NULL;
+
+                break;
+            }
+            case ENUM_MSG_TYPE_SHARE_FILE_NOTE_RESPOND:{
+                qDebug() << "ENUM_MSG_TYPE_SHARE_FILE_NOTE_RESPOND";
+                QString strRecvPath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1").arg(pdu->caData);
+                QString strShareFilePath = QString("/home/fumoumou/Desktop/NetDisk/TcpServer/UsrFile/%1").arg((char *)(pdu->caMsg));
+
+                int index = strShareFilePath.lastIndexOf('/');
+                QString strFileName = strShareFilePath.right(strShareFilePath.size()-index-1);
+                strRecvPath = strRecvPath + '/' + strFileName;
+
+                QFileInfo fileInfo(strShareFilePath);
+
+                qDebug() << "接收目录" << strRecvPath;
+                qDebug() << "分享目录" << strShareFilePath;
+
+                if (fileInfo.isFile())
+                {
+                    QFile::copy(strShareFilePath,strRecvPath);
+                    qDebug() << "分享目录完成";
+                } else if (fileInfo.isDir())
+                {
+                    copyDir(strShareFilePath,strRecvPath);
+                }
+                break;
+            }
             default: {
                 break;
             }
@@ -630,5 +691,34 @@ void MyTcpSocket::sendFileToClient() {
     delete[] pData;
     qDebug() << "释放pData";
     pData = NULL;
+}
+
+void MyTcpSocket::copyDir(QString strSrcDir ,QString strDestDir) {
+    QDir dir;
+    dir.mkdir(strDestDir);
+    dir.setPath(strSrcDir);
+    QFileInfoList fileInfoList = dir.entryInfoList();
+    QString srcTmp;
+    QString destTmp;
+    for (int i = 0; i < fileInfoList.size(); ++i) {
+        qDebug() << "filename:" << fileInfoList[i].fileName();
+        if (fileInfoList[i].isFile())
+        {
+            fileInfoList[i].fileName();
+            srcTmp = strSrcDir+'/'+fileInfoList[i].fileName();
+            destTmp = strDestDir + '/'+fileInfoList[i].fileName();
+            QFile::copy(srcTmp,destTmp);
+        } else if (fileInfoList[i].isDir())
+        {
+            if (fileInfoList[i].fileName() == QString("..") || fileInfoList[i].fileName() == QString("."))
+            {
+                continue;
+            }
+            srcTmp = strSrcDir+'/'+fileInfoList[i].fileName();
+            destTmp = strDestDir + '/'+fileInfoList[i].fileName();
+            copyDir(srcTmp,destTmp);
+        }
+    }
+
 }
 

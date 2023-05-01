@@ -8,6 +8,7 @@ mytcpserver::mytcpserver() {
 }
 
 mytcpserver &mytcpserver::getInstance() {
+    qDebug() << "mytcpserver::getInstance";
     static mytcpserver instance;
     return instance;
 }
@@ -40,6 +41,7 @@ void mytcpserver::delteSocket(MyTcpSocket *mysocket) {
 
 void mytcpserver::resend(const char *pername, PDU *pdu) {
     if (NULL == pername || NULL == pdu){
+        qDebug() << "转发失败";
         return;
     }
     QString strName = pername;
